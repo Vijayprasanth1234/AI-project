@@ -1,65 +1,55 @@
-import os
-import traceback
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from dotenv import load_dotenv
+from flask import Flask, jsonify
+import boto3
+import datetime
 
-load_dotenv()
+app = Flask(__name__)
 
-app = FastAPI(title="AWS Cost Optimization Agent API")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Initialize AWS clients
+ce = boto3.client('ce')  # Cost Explorer
+cloudwatch = boto3.client('cloudwatch')
 
-def import_run_once():
-    from src.main import run_once
-    return run_once
+@app.route('/cost', methods=['GET'])
+def get_cost_data():
+    """
+    Fetch cost and usage data from AWS Cost Explorer.
+    """
+    end = datetime.datetime.today()
+    start = end - datetime.timedelta(days=30)  # last 30 days
 
-def import_generator():
-    from src.generator_llm import generate_recommendation
-    return generate_recommendation
+    response = ce.get_cost_and_usage(
+        TimePeriod={'Start': start.strftime('%Y-%m-%d'), 'End': end.strftime('%Y-%m-%d')},
+        Granularity='DAILY',
+        Metrics=['UnblendedCost']
+    )
 
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+    results = []
+    for item in response['ResultsByTime']:
+        results.append({
+            'Date': item['TimePeriod']['Start'],
+            'Cost': item['Total']['UnblendedCost']['Amount']
+        })
 
-@app.get("/recommendations")
-def recommendations():
-    try:
-        run_once = import_run_once()
-        out = run_once()
-        return {"recommendations": out}
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+    return jsonify(results)
 
-class ChatRequest(BaseModel):
-    message: str
+@app.route('/cloudwatch/<string:namespace>/<string:metric_name>', methods=['GET'])
+def get_cloudwatch_metrics(namespace, metric_name):
+    """
+    Fetch CloudWatch metric data.
+    Example namespace: AWS/EC2
+    Example metric_name: CPUUtilization
+    """
+    response = cloudwatch.get_metric_statistics(
+        Namespace=namespace,
+        MetricName=metric_name,
+        Dimensions=[{'Name': 'InstanceId', 'Value': 'i-0123456789abcdef0'}],  # replace with real instance ID
+        StartTime=datetime.datetime.utcnow() - datetime.timedelta(hours=24),
+        EndTime=datetime.datetime.utcnow(),
+        Period=3600,
+        Statistics=['Average']
+    )
 
-@app.post("/chat")
-def chat(req: ChatRequest):
-    try:
-        text = req.message.strip().lower()
-        if any(k in text for k in ["idle", "ec2", "instances", "rightsizing", "recommend"]):
-            run_once = import_run_once()
-            out = run_once()
-            return {"type": "recommendations", "payload": out}
-        else:
-            generate = import_generator()
-            sample = {
-                "instance_id": "i-sample",
-                "from": "t3.large",
-                "to": "t3.medium",
-                "cpu_avg": 6.2,
-                "estimated_monthly_savings_usd": 42.5
-            }
-            llm_out = generate(sample)
-            return {"type": "explain", "payload": llm_out}
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+    data_points = [{'Timestamp': dp['Timestamp'].isoformat(), 'Average': dp['Average']} for dp in response['Datapoints']]
+    return jsonify(data_points)
+
+if __name__ == '__main__':
+    app.run(debug=True)

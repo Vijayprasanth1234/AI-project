@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Cost Optimization Agent</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>AWS Cost Optimization Dashboard</h1>
+
+    <button id="fetchCostBtn">Fetch Last 30 Days Cost</button>
+    <pre id="costReport"></pre>
+
+    <h2>CloudWatch Metrics</h2>
+    <input type="text" id="namespace" placeholder="Namespace (e.g., AWS/EC2)">
+    <input type="text" id="metric" placeholder="Metric Name (e.g., CPUUtilization)">
+    <button id="fetchMetricBtn">Fetch Metric</button>
+    <pre id="metricReport"></pre>
+
+    <script src="script.js"></script>
+</body>
+</html>

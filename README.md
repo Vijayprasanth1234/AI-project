@@ -1,11 +1,15 @@
-# AWS Cost Optimization AI Agent 🚀
+# AWS Cost Optimization Agent
 
-This repo contains a web-based chatbot powered by FastAPI + React.
-It connects to AWS (via boto3), analyzes cost optimization opportunities (idle EC2, rightsizing, etc.),
-and uses an LLM (OpenAI GPT) to generate natural-language recommendations.
+A dashboard to fetch AWS costs and CloudWatch metrics.
 
-## Setup
-1. Copy `.env.example` → `.env` and update secrets.
-2. Run `docker-compose up --build`.
-3. Backend: http://localhost:8000/docs
-4. Frontend: http://localhost:3000
+## Features
+- Get last 30 days of AWS cost from Cost Explorer
+- Fetch CloudWatch metrics (CPU, memory, etc.)
+- Web interface with Flask backend
+- Dockerized for easy deployment
+
+## How to Run
+1. Configure AWS credentials locally (via `aws configure`).
+2. Build and run Docker:
+   ```bash
+   docker-compose up --build

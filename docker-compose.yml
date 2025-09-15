@@ -1,21 +1,12 @@
-version: "3.8"
-services:
-  backend:
-    build: ./backend
-    env_file:
-      - .env
-    volumes:
-      - ./src:/app/src:ro
-      - ./logs:/app/logs
-      - ~/.aws:/root/.aws:ro
-    ports:
-      - "8000:8000"
+version: '3.8'
 
-  frontend:
-    build: ./frontend
-    env_file:
-      - .env
+services:
+  aws-agent:
+    build: .
     ports:
-      - "3000:3000"
-    depends_on:
-      - backend
+      - "5000:5000"
+    volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+    environment:
+      - AWS_REGION=us-east-1
