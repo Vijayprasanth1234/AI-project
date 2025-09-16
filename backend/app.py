@@ -9,7 +9,7 @@ ce = boto3.client('ce')  # Cost Explorer
 cloudwatch = boto3.client('cloudwatch')
 
 @app.route('/cost', methods=['GET'])
-def get_cost_data():
+async def get_cost_data():
     """
     Fetch cost and usage data from AWS Cost Explorer.
     """
@@ -21,6 +21,7 @@ def get_cost_data():
         Granularity='DAILY',
         Metrics=['UnblendedCost']
     )
+    print (response)
 
     results = []
     for item in response['ResultsByTime']:
