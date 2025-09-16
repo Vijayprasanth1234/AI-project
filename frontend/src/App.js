@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:8000";
+const API_BASE = process.env.REACT_APP_API_BASE || "http://44.221.124.81:5000";
 
 function ChatMessage({ m }) {
   return (
@@ -59,3 +59,7 @@ function App() {
 }
 
 export default App;
+// Before
+
+// After
+const BACKEND_URL = "http://44.221.124.81:5000/api/cost";
